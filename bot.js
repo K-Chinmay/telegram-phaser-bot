@@ -1,30 +1,42 @@
 require("dotenv").config();
 const TelegramBot = require("node-telegram-bot-api");
 
-// Replace this with your BotFather token
 const token = process.env.TELEGRAM_BOT_TOKEN;
-const bot = new TelegramBot(token, { polling: true });
+console.log("Bot token:", token); // Check if token loads correctly
 
-// Main /start command that sends Play and Share buttons
-bot.onText(/\/start/, (msg) => {
-  const chatId = msg.chat.id;
-
-  bot.sendMessage(chatId, "Welcome! Click below to play or share the game.", {
-    reply_markup: {
-      inline_keyboard: [
-        [
-          {
-            text: "Play Game",
-            web_app: { url: "https://tubular-taiyaki-18463f.netlify.app/" }, // Your game URL
-          },
-          {
-            text: "Share Game",
-            switch_inline_query: "Jump in for a quick 2 min Game!",
-          },
-        ],
-      ],
-    },
-  });
+const bot = new TelegramBot(token, {
+  polling: {
+    autoStart: false,
+    interval: 300, // Check for updates every 300 ms
+    params: { timeout: 10 }, // Long polling timeout
+  },
 });
 
-console.log("Bot is running!");
+const gameShortName = "hellpong";
+
+bot.deleteWebHook().then(() => {
+  bot.startPolling();
+
+  // Handle /start and /play commands to send the game
+  bot.onText(/\/(start|play)/, (msg) => {
+    const chatId = msg.chat.id;
+
+    bot
+      .sendGame(chatId, gameShortName, {
+        reply_markup: {
+          inline_keyboard: [[]],
+        },
+      })
+      .catch((error) => {
+        console.error("Failed to send game:", error);
+      });
+  });
+
+  // Optional: Handle callback queries when users click "Play"
+  bot.on("callback_query", (query) => {
+    const chatId = query.message.chat.id;
+    bot.answerCallbackQuery(query.id, {
+      url: `https://tubular-taiyaki-18463f.netlify.app/`,
+    });
+  });
+});
