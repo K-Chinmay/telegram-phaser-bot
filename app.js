@@ -2,21 +2,29 @@ require("dotenv").config();
 const TelegramBot = require("node-telegram-bot-api");
 const express = require("express");
 
-const token = process.env.TELEGRAM_BOT_TOKEN;
-console.log("Bot token:", token); // Check if token loads correctly
-
-const bot = new TelegramBot(token, { polling: false }); // Disable polling
 const app = express();
 app.use(express.json());
 
-// Define your webhook URL
+// Load the bot token from environment variables
+const token = process.env.TELEGRAM_BOT_TOKEN;
+if (!token) {
+  throw new Error(
+    "TELEGRAM_BOT_TOKEN is not defined in the environment variables."
+  );
+}
+
+console.log("Bot token loaded successfully");
+
+// Determine webhook URL based on environment
 const webhookUrl = `https://055f-223-233-84-214.ngrok-free.app/bot${token}`;
+// Initialize the Telegram bot
+const bot = new TelegramBot(token, { polling: false });
 
 // Set the webhook
 bot
   .setWebHook(webhookUrl)
   .then(() => {
-    console.log("Webhook set successfully");
+    console.log(`Webhook set successfully: ${webhookUrl}`);
   })
   .catch((error) => {
     console.error("Failed to set webhook:", error);
@@ -26,6 +34,11 @@ bot
 app.post(`/bot${token}`, (req, res) => {
   bot.processUpdate(req.body);
   res.sendStatus(200);
+});
+
+// Root route for testing
+app.get("/", (req, res) => {
+  res.send("Bot server is running!");
 });
 
 // Game logic
@@ -38,7 +51,7 @@ bot.onText(/\/(start|play)/, (msg) => {
   bot
     .sendGame(chatId, gameShortName, {
       reply_markup: {
-        inline_keyboard: [[]],
+        inline_keyboard: [[]], // Add buttons here if needed
       },
     })
     .catch((error) => {
@@ -49,7 +62,7 @@ bot.onText(/\/(start|play)/, (msg) => {
 // Handle callback queries for "Play"
 bot.on("callback_query", (query) => {
   bot.answerCallbackQuery(query.id, {
-    url: `https://tubular-taiyaki-18463f.netlify.app/`,
+    url: `https://tubular-taiyaki-18463f.netlify.app/`, // Replace with your actual game URL
   });
 });
 
