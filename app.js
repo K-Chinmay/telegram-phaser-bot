@@ -16,7 +16,7 @@ if (!token) {
 console.log("Bot token loaded successfully");
 
 // Determine webhook URL based on environment
-const webhookUrl = `https://055f-223-233-84-214.ngrok-free.app/bot${token}`;
+const webhookUrl = `https://telegram-phaser-bot.onrender.com/bot${token}`;
 // Initialize the Telegram bot
 const bot = new TelegramBot(token, { polling: false });
 
